@@ -186,12 +186,12 @@ with open(sys.argv[1], 'rb') as csvfile:
                 continue
             if row['constructor'].lower() in constructors:
                 not_matching_but_present += 1
-            set_unfound_constructors.add(row['constructor'].lower())
+            set_unfound_constructors.add((vin, row['constructor'].lower()))
 
 
 with open('/tmp/constructors.unfound', 'wb') as constructor_file:
     for c in set_unfound_constructors:
-        constructor_file.write("{}\n".format(c))
+        constructor_file.write("{}, {}\n".format(vin, c))
 
 print "Nb empty constructors: {}".format(empty_constructors)
 print "Nb empty vin: {}".format(empty_vin)
