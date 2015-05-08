@@ -1,13 +1,11 @@
 #!/usr/bin/python
 # -*- coding: utf8 -*-
-import csv
-import sys
-import operator
+import sys, os, csv, operator
+from unidecode import unidecode
 
 if len(sys.argv) != 2:
     print "Usage python check_constructor.py name_file"
 
-print "Filename: {}".format(sys.argv[1])
 
 fieldnames=['category', 'first_registration_date', 'classification',
             'usage', 'first_use_date', 'colour', 'nb_doors', 'body_type',
@@ -18,136 +16,32 @@ fieldnames=['category', 'first_registration_date', 'classification',
             'commercial_name', 'method', 'type_id_number', 'driving_power',
             'municipality', 'co2', 'nb_kilometers', 'post_code', '10_vin',
             'sequential_numbering']
-map_wmi_constructor = {
-    'AAV': ['Volkswagen'],
-    'AFA': ['Ford'],
-    'CL9': ['Wallyscar'],
-    'JA': ['Isuzu'],
-    'JF': ['Fuji Heavy Industries', 'fuji'],
-    'JH': ['Honda'],
-    'JMB': ['Mitsubishi'],
-    'JMZ': ['Mazda'],
-    'JN': ['Nissan'],
-    'JS': ['Suzuki'],
-    'JT': ['Toyota'],
-    'KL': ['Daewoo/GM Korea', 'daewoo', 'gm korea'],
-    'KMH': ['Hyundai'],
-    'KN': ['Kia'],
-    'KPT': ['SsangYong'],
-    'LVZ': ['DFSK'],
-    'NMT': ['Toyota'],
-    'SAJ': ['Jaguar'],
-    'SAL': ['Land Rover', 'landrover'],
-    'SAR': ['Rover'],
-    'SB1': ['Toyota'],
-    'SCC': ['Lotus Cars', 'lotus'],
-    'SCE': ['DeLorean'],
-    'SHH': ['Honda'],
-    'SJN': ['Nissan'],
-    'TMA': ['Hyundai'],
-    'TMB': ['Škoda', 'skoda'],
-    'TRU': ['Audi'],
-    'UU': ['Dacia'],
-    'VA0': ['ÖAF', 'oaf'],
-    'VF1': ['Renault'],
-    'VF3': ['Peugeot'],
-    'VF6': ['Renault Trucks/Volvo', 'renault'],
-    'VF7': ['Citroën', 'citroen'],
-    'VFE': ['IvecoBus'],
-    'VSS': ['SEAT'],
-    'VV9': ['Tauro Sport Auto'],
-    'WAU': ['Audi'],
-    'WAP': ['Alpina'],
-    'WBA': ['BMW'],
-    'WBS': ['BMW M', 'bmw'],
-    'WDB': ['Mercedes-Benz'],
-    'WDC': ['DaimlerChrysler AG/Daimler AG', 'daimler', 'chrysler', 'daimlerchrysler'],
-    'WDD': ['DaimlerChrysler AG/Daimler AG', 'daimler', 'chrysler', 'daimlerchrysler'],
-    'WMX': ['DaimlerChrysler AG/Daimler AG', 'daimler', 'chrysler', 'daimlerchrysler'],
-    'WEB': ['EvoBus'],
-    'WF0': ['Ford of Europe', 'ford'],
-    'WJM': ['Iveco'],
-    'WJR': ['Irmscher'],
-    'WKK': ['Kässbohrer', 'kassbohrer'],
-    'WMA': ['MAN'],
-    'WME': ['Smart'],
-    'WMW': ['Mini'],
-    'WP0': ['Porsche car', 'porsche'],
-    'WP1': ['Porsche SUV', 'porsche'],
-    'WUA': ['Quattro'],
-    'WVG': ['Volkswagen'],
-    'WVW': ['Volkswagen'],
-    'WV1': ['Volkswagen Commercial Vehicles', 'volkswagen'],
-    'WV2': ['Volkswagen Commercial Vehicles', 'volkswagen'],
-    'W0L': ['Opel/Vauxhall', 'opel'],
-    'W0SV': ['Opel Special Vehicles', 'opel'],
-    'YK1': ['Saab'],
-    'YS3': ['Saab'],
-    'YTN': ['Saab NEVS', 'saab'],
-    'YV1': ['Volvo Cars', 'volvo'],
-    'ZAM': ['Maserati'],
-    'ZAR': ['Alfa Romeo', 'alfa', 'alfaromeo'],
-    'ZCF': ['Iveco'],
-    'ZFA': ['Fiat Automobiles', 'fiat'],
-    'ZFF': ['Ferrari'],
-    'ZGA': ['IvecoBus'],
-    'ZHW': ['Lamborghini'],
-    'ZLA': ['Lancia'],
-    '1B': ['Dodge'],
-    '1C': ['Chrysler'],
-    '1F': ['Ford'],
-    '1G': ['General Motors', 'generalmotors', 'gm'],
-    '1G3': ['Oldsmobile'],
-    '1GC': ['Chevrolet'],
-    '1GM': ['Pontiac'],
-    '1H': ['Honda'],
-    '1J': ['Jeep'],
-    '1L': ['Lincoln'],
-    '1M': ['Mercury'],
-    '1N': ['Nissan'],
-    '1VW': ['Volkswagen'],
-    '1YV': ['Mazda'],
-    '2F': ['Ford'],
-    '2G': ['General Motors'],
-    '2G1': ['Chevrolet'],
-    '2G2': ['Pontiac'],
-    '2H': ['Honda'],
-    '2HM': ['Hyundai'],
-    '2M': ['Mercury'],
-    '2T': ['Toyota'],
-    '3F': ['Ford'],
-    '3G': ['General Motors'],
-    '3H': ['Honda'],
-    '3N': ['Nissan'],
-    '3VW': ['Volkswagen'],
-    '4F': ['Mazda'],
-    '4J': ['Mercedes-Benz'],
-    '4M': ['Mercury'],
-    '4S': ['Subaru'],
-    '4T': ['Toyota'],
-    '4US': ['BMW'],
-    '5F': ['Honda'],
-    '5L': ['Lincoln'],
-    '5T': ['Toyota'],
-    '5X': ['Hyundai/Kia', 'hyundai', 'kia'],
-    '5YJ': ['Tesla'],
-    '6F': ['Ford'],
-    '6G': ['General Motors', 'generalmotors', 'gm'],
-    '6G1': ['Chevrolet'],
-    '6G2': ['Pontiac'],
-    '6H': ['Holden'],
-    '6MM': ['Mitsubishi'],
-    '6T1': ['Toyota'],
-    '8AP': ['Fiat'],
-    '8AT': ['Iveco'],
-    '9BD': ['Fiat Automóveis', 'fiat'],
-    '9BW': ['Volkswagen'],
-    '93H': ['Honda'],
-    '93W': ['Fiat Professional', 'fiat'],
-    '93Z': ['Iveco'],
-    '9BH': ['Hyundai']}
 
-constructors = set([s.lower() for s in reduce(operator.add, map_wmi_constructor.values())])
+map_wmi_constructor = {}
+map_constructor_aliases = {}
+map_constructor_wmi = {}
+map_constructor_no_set = {}
+p = 'wmi_constructors'
+for constructor in [f for f in os.listdir(p) if os.path.isdir(os.path.join(p, f))]:
+    map_constructor_wmi[constructor] = set()
+    map_constructor_no_set[constructor] = set()
+    constructor_path = os.path.join(p, constructor)
+    map_constructor_aliases[constructor] = set()
+    for wmi in [f for f in os.listdir(constructor_path) if os.path.isfile(os.path.join(constructor_path, f))]:
+        with open(os.path.join(p, constructor, wmi), 'r+') as file_:
+            if wmi == 'aliases':
+                for l in file_:
+                    if len(l.strip()) == 0:
+                        continue
+                    map_constructor_aliases[constructor].add(l.strip())
+                continue
+            map_constructor_wmi[constructor].add(wmi)
+            map_wmi_constructor[wmi] = constructor
+            for l in file_:
+                if len(l) == 0:
+                    continue
+	        map_constructor_aliases[constructor].add(l.strip())
+aliases = set([s.lower() for s in reduce(set.union, map_constructor_aliases.values())])
 
 with open(sys.argv[1], 'rb') as csvfile:
     i = 0
@@ -173,25 +67,56 @@ with open(sys.argv[1], 'rb') as csvfile:
             continue
         vin = row['10_vin']
         constructor = ""
+        quit = False
         for i in xrange(2, 5):
-            constructor = map_wmi_constructor.get(vin[:i].upper(), None)
+            wmi = vin[:i].upper()
+            constructor = map_wmi_constructor.get(wmi, None)
             if not constructor:
                 continue
+            aliases_list = map_constructor_aliases[constructor]
             able_to_find_vin += 1
-            if constructor[0].lower() == row['constructor'].lower():
+            raw_constructor = unidecode(unicode(row['constructor'], 'utf-8')).lower()
+            if map_wmi_constructor[wmi].lower() == raw_constructor:
                 matching_vin_constructor += 1
                 continue
-            if row['constructor'].lower() in constructor:
+            if raw_constructor in aliases_list:
                 nearly_matching_vin_constructor += 1
                 continue
-            if row['constructor'].lower() in constructors:
+            if raw_constructor in aliases:
                 not_matching_but_present += 1
-            set_unfound_constructors.add((vin[:4], row['constructor'].lower()))
+            no_set = map_constructor_no_set[constructor]
+            if raw_constructor in no_set:
+                continue
+            print "We found the WMI code, but we are unable to find a matching constructor"
+            print "List of aliases: {}".format(aliases_list)
+            print "Do you want to add {} as an alias for this constructor: {}".format(raw_constructor,
+		map_wmi_constructor[wmi])
+            input_ = raw_input("y/n/q")
+            print "{} {}".format(input_, (input_=="y"))
+            if input_ == "y":
+		ref_constructor = map_wmi_constructor[wmi]
+		map_constructor_aliases[ref_constructor].add(raw_constructor)
+                continue
+                
+            if input_ == "q":
+                quit = True
+                break
+
+            if input_ == "n":
+                map_constructor_no_set[constructor].add(raw_constructor)
+            set_unfound_constructors.add((vin[:4], row['constructor']))
+        if quit:
+            break
 
 
 with open('/tmp/constructors.unfound', 'wb') as constructor_file:
     for c in set_unfound_constructors:
         constructor_file.write("{}, {}\n".format(c[0], c[1]))
+
+for constructor, aliases in map_constructor_aliases.iteritems():
+    with open(os.path.join('wmi_constructors', constructor, 'aliases'), 'wb') as aliases_file:
+	for alias in aliases:
+	    aliases_file.write("{}\n".format(alias))
 
 print "Nb empty constructors: {}".format(empty_constructors)
 print "Nb empty vin: {}".format(empty_vin)
